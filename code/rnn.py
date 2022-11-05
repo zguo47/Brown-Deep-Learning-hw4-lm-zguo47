@@ -30,9 +30,8 @@ class MyRNN(tf.keras.Model):
         self.embedding_table = tf.Variable(tf.random.normal([self.vocab_size, self.embed_size], stddev=0.01, dtype=tf.float32))
         # self.embedding_layer = tf.keras.layers.Embedding(self.vocab_size, self.embed_size)
         self.lstm = tf.keras.layers.LSTM(self.rnn_size, return_sequences=True)
-        self.model = tf.keras.Sequential([
-            tf.keras.layers.Dense(self.vocab_size, activation='softmax', dtype = 'float32')
-        ])    
+        self.model = tf.keras.layers.Dense(self.vocab_size, activation='softmax', dtype = 'float32')
+ 
 
     def call(self, inputs):
         """
