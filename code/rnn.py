@@ -25,7 +25,14 @@ class MyRNN(tf.keras.Model):
         ## TODO: Finish off the method as necessary.
         ## Define an embedding component to embed the word indices into a trainable embedding space.
         ## Define a recurrent component to reason with the sequence of data. 
-        ## You may also want a dense layer near the end...    
+        ## You may also want a dense layer near the end...
+
+        self.embedding_table = tf.Variable(tf.random.normal([self.vocab_size, self.embed_size], stddev=0.01, dtype=tf.float32))
+        # self.embedding_layer = tf.keras.layers.Embedding(self.vocab_size, self.embed_size)
+        self.lstm = tf.keras.layers.LSTM(self.rnn_size, return_sequences=True)
+        self.model = tf.keras.Sequential([
+            tf.keras.layers.Dense(self.vocab_size, activation='softmax', dtype = 'float32')
+        ])    
 
     def call(self, inputs):
         """
@@ -33,7 +40,30 @@ class MyRNN(tf.keras.Model):
         - You must use an LSTM or GRU as the next layer.
         """
         ## TODO: Implement the method as necessary
-        return inputs
+        # window_size = 20
+        
+        # X_RNN = tf.reshape(inputs[:-1], (-1, window_size))
+        # y_RNN = tf.reshape(inputs[1:], (-1, window_size))
+
+        embedding_input = tf.nn.embedding_lookup(self.embedding_table, inputs)
+        # X_RNN_embedding = tf.reshape(X_RNN_embedding, (-1, window_size, self.embed_size))
+
+        # X_RNN_embedding = self.embedding_table(X_RNN)
+        # Y_RNN_embedding = self.embedding_table(y_RNN)
+
+
+        # lstm = tf.keras.layers.LSTM(units=self.embed_size, return_sequences=False, return_state=False)
+        # lstm_seq_state = tf.keras.layers.LSTM(units=self.embed_size, return_sequences=True,  return_state=True )
+
+        # lstm.build(X_RNN_embedding.shape)
+        # lstm_seq_state.build(X_RNN_embedding.shape)
+
+        # lstm_weights = lstm.get_weights()
+        # lstm_seq_state.set_weights(lstm_weights)
+
+        outputs_lstm = self.lstm(embedding_input)
+        outputs = self.model(outputs_lstm)
+        return outputs
 
     ##########################################################################################
 
@@ -74,12 +104,21 @@ def get_text_model(vocab):
     model = MyRNN(len(vocab))
 
     ## TODO: Define your own loss and metric for your optimizer
-    loss_metric = None 
-    acc_metric  = None
+    loss_metric = tf.keras.losses.SparseCategoricalCrossentropy()
+
+    class Perplexity(tf.keras.losses.SparseCategoricalCrossentropy):
+        def __init__(self, *args, name="perplexity", **kwargs):
+            super().__init__(*args, name="perplexity", **kwargs)
+        
+        def __call__(self, *args, **kwds):
+            return tf.exp(tf.reduce_mean(super().__call__(*args, **kwds)))
+
+
+    acc_metric  = Perplexity()
 
     ## TODO: Compile your model using your choice of optimizer, loss, and metrics
     model.compile(
-        optimizer=None, 
+        optimizer=tf.keras.optimizers.Adam(0.001), 
         loss=loss_metric, 
         metrics=[acc_metric],
     )
@@ -101,10 +140,14 @@ def main():
     ##   from train_x and test_x. You also need to drop the first element from train_y and test_y.
     ##   If you don't do this, you will see very, very small perplexities.
     ##   HINT: You might be able to find this somewhere...
-    vocab = None
 
-    X0, Y0  = None, None
-    X1, Y1  = None, None
+    data_path = "../data"
+    train_id, test_id, word_to_token_dict = get_data(f"{data_path}/train.txt", f"{data_path}/test.txt")
+
+    vocab = word_to_token_dict
+
+    X0, Y0 = train_id[:-1], train_id[1:]
+    X1, Y1  = test_id[:-1],  test_id[1:]
 
     ## TODO: Get your model that you'd like to use
     args = get_text_model(vocab)

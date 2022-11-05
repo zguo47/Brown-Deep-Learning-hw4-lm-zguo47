@@ -20,12 +20,42 @@ def get_data(train_file, test_file):
 
     ## TODO: Implement pre-processing for the data files. See notebook for help on this.
 
+    with open(train_file) as f:
+        word_list_train = []
+        unique_word_list_train = []
+        line_train = f.readlines()
+        for l in line_train:
+            word_list_train.extend(l.lower().split())
+
+    
+    with open(test_file) as f:
+        word_list_test = []
+        unique_word_list_test = []
+        line_test = f.readlines()
+        for l in line_test:
+            word_list_test.extend(l.lower().split())
+
+
+    index = len(word_list_train)
+    word_list_train.extend(word_list_test)
+    unique_word_list = sorted(set(word_list_train))
+    vocabulary = {w: i for i, w in enumerate(unique_word_list)}
+    # train_data = [vocabulary[w] for w in word_list_train[0:index]]
+    # test_data = [vocabulary[w] for w in word_list_train[index:]]
+    train_data = word_list_train[0:index]
+    test_data = word_list_train[index:]
+    vocab_size = len(vocabulary.keys())
+    
     # Sanity Check, make sure there are no new words in the test data.
     assert reduce(lambda x, y: x and (y in vocabulary), test_data)
 
     # Vectorize, and return output tuple.
     train_data = list(map(lambda x: vocabulary[x], train_data))
     test_data  = list(map(lambda x: vocabulary[x], test_data))
+
+    # print(train_data)
+    # print(test_data)
+    # print(vocabulary)
 
     # print("train_data", train_data)
     return train_data, test_data, vocabulary

@@ -21,6 +21,11 @@ class MyTrigram(tf.keras.Model):
         self.hidden_size = hidden_size
         ## TODO: Finish off the method as necessary
 
+        self.embedding_table = tf.keras.layers.Embedding(self.vocab_size, self.embed_size)
+        self.model = tf.keras.Sequential([
+            tf.keras.layers.Dense(self.vocab_size, activation='softmax', dtype = 'float32')
+        ])
+
 
     def call(self, inputs):
         """
@@ -29,7 +34,21 @@ class MyTrigram(tf.keras.Model):
         :return: logits: The batch element probabilities as a tensor of shape (batch_size, vocab_size)
         """
         ## TODO: Implement the method as necessary
-        return inputs
+
+        # X_trigram = np.vstack([inputs[0:-2], inputs[1:-1]]).T
+
+        # y_trigram = inputs[2:]
+
+        # tf_embedding_table = tf.Variable(tf.random.normal([inputs.shape[0], inputs.shape[1]], stddev=0.01, dtype=tf.float32))
+        # tf_embedding_vectors = tf.nn.embedding_lookup(tf_embedding_table, X_trigram)
+        # tf_embedding_vectors = tf.reshape(tf_embedding_vectors, output_shape)
+
+        embedding_vector0 = self.embedding_table(inputs[:, 0])
+        embedding_vector1 = self.embedding_table(inputs[:, 1])
+        embedding_input = tf.concat([embedding_vector0, embedding_vector1], axis = 1)
+        outputs = self.model(embedding_input)
+
+        return outputs
 
     def generate_sentence(self, word1, word2, length, vocab):
         """
@@ -67,12 +86,21 @@ def get_text_model(vocab):
     model = MyTrigram(len(vocab))
 
     ## TODO: Define your own loss and metric for your optimizer
-    loss_metric = None 
-    acc_metric  = None
+    loss_metric = tf.keras.losses.SparseCategoricalCrossentropy()
+
+    class Perplexity(tf.keras.losses.SparseCategoricalCrossentropy):
+        def __init__(self, *args, name="perplexity", **kwargs):
+            super().__init__(*args, name="perplexity", **kwargs)
+        
+        def __call__(self, *args, **kwds):
+            return tf.exp(tf.reduce_mean(super().__call__(*args, **kwds)))
+
+
+    acc_metric  = Perplexity()
 
     ## TODO: Compile your model using your choice of optimizer, loss, and metrics
     model.compile(
-        optimizer=None, 
+        optimizer=tf.keras.optimizers.Adam(0.001), 
         loss=loss_metric, 
         metrics=[acc_metric],
     )
@@ -90,10 +118,15 @@ def main():
 
     ## TODO: Pre-process and vectorize the data
     ##   HINT: You might be able to find this somewhere...
-    vocab = None
+    data_path = "../data"
+    train_id, test_id, word_to_token_dict = get_data(f"{data_path}/train.txt", f"{data_path}/test.txt")
 
-    X0, Y0  = None, None
-    X1, Y1  = None, None
+    vocab = word_to_token_dict
+
+    X0, Y0  = np.array(train_id[:-1]), np.array(train_id[2:])
+    X1, Y1  = np.array(test_id[:-1]), np.array(test_id[2:])
+    X0 = np.column_stack((X0[:-1], X0[1:]))
+    X1 = np.column_stack((X1[:-1], X1[1:]))
 
     # TODO: Get your model that you'd like to use
     args = get_text_model(vocab)
