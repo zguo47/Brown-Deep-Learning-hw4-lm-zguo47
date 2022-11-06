@@ -124,7 +124,7 @@ def get_text_model(vocab):
 
     return SimpleNamespace(
         model = model,
-        epochs = 3,
+        epochs = 4,
         batch_size = 100,
     )
 
