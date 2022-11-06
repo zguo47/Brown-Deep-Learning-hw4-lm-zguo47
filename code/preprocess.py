@@ -25,7 +25,7 @@ def get_data(train_file, test_file):
         unique_word_list_train = []
         line_train = f.readlines()
         for l in line_train:
-            word_list_train.extend(l.lower().split())
+            word_list_train.extend(l.split())
 
     
     with open(test_file) as f:
@@ -33,7 +33,7 @@ def get_data(train_file, test_file):
         unique_word_list_test = []
         line_test = f.readlines()
         for l in line_test:
-            word_list_test.extend(l.lower().split())
+            word_list_test.extend(l.split())
 
 
     index = len(word_list_train)
