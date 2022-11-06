@@ -117,7 +117,7 @@ def get_text_model(vocab):
 
     ## TODO: Compile your model using your choice of optimizer, loss, and metrics
     model.compile(
-        optimizer=tf.keras.optimizers.Adam(0.00005), 
+        optimizer=tf.keras.optimizers.Adam(0.0001), 
         loss=loss_metric, 
         metrics=[acc_metric],
     )
@@ -125,7 +125,7 @@ def get_text_model(vocab):
     return SimpleNamespace(
         model = model,
         epochs = 3,
-        batch_size = 80,
+        batch_size = 100,
     )
 
 
